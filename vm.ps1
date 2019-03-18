@@ -14,9 +14,9 @@ param(
 
 $securePassword1 = ConvertTo-SecureString -String "Password" -AsPlainText -Force
 
-$cred1 = New-Object System.Management.Automation.PSCredential -ArgumentList cfb51ce4-b395-413b-99ff-07ce01ca09c1, $securePassword1
+$cred1 = New-Object System.Management.Automation.PSCredential -ArgumentList xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx, $securePassword1
 
-Login-AzureRmAccount -ServicePrincipal -Tenant 771f1cf4-b1ac-4f2e-ad21-de39ea201e7e -Credential $cred1 
+Login-AzureRmAccount -ServicePrincipal -Tenant xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx -Credential $cred1 
 
 New-AzureRmResourceGroup -Name $resourceGroupName -Location $location -Verbose -Force
 
