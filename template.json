@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dns": {
+      "type": "string"
+    }
+  },
+  "variables": {
+
+  },
+  "resources": [
+    {
+      "name": "pip01",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2018-12-01",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('dns')]"
+
+        }
+      }
+    },
+    {
+      "name": "pip01",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2018-12-01",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [ "10.0.0.0/16" ]
+        },
+        "subnets": [
+          {
+            "name": "subnet01",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "nic01",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2018-12-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks','pip01')]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets','pip01','subnet01')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses','pip01')]"
+              },
+              "primary": true
+            }
+          }
+        ]       
+
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}
