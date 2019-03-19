@@ -1,0 +1,135 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "dns": {
+      "type": "string"
+    }
+  },
+  "variables": {
+
+  },
+  "resources": [
+    {
+      "name": "[concat('pip01', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2018-12-01",
+      "sku": {
+        "name": "Basic"
+      },
+      "copy": {
+        "count": 3,
+        "mode": "Parallel",
+        "name": "allips"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(parameters('dns'), copyIndex())]"
+
+        }
+      }
+    },
+    {
+      "name": "pip01",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2018-12-01",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [ "10.0.0.0/16" ]
+        },
+        "subnets": [
+          {
+            "name": "subnet01",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[concat('nic01', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2018-12-01",
+      "copy": {
+        "count": 1,
+        "mode": "Parallel",
+        "name": "allnics"
+      },
+      "dependsOn": [
+        "allips",
+        "[resourceId('Microsoft.Network/virtualNetworks','pip01')]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets','pip01','subnet01')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat('pip01', copyIndex()))]"
+              },
+              "primary": true
+            }
+          }
+        ]
+
+      }
+    },
+    {
+      "name": "[concat('vm01', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2018-10-01",
+      "copy": {
+        "count": 1,
+        "mode": "Parallel",
+        "name": "allvms"
+      },
+      "dependsOn": [
+        "allnics"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_A3"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "createOption": "FromImage",
+            "diskSizeGB": "512",
+            "caching": "ReadWrite"
+          }
+        },
+        "osProfile": {
+          "computerName": "vm01",
+          "adminUsername": "citynextadmin",
+          "adminPassword": "citynext!1234"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('nic01', copyIndex()))]"
+            }
+
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}
